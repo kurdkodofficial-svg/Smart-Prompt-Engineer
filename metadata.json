@@ -1,0 +1,6 @@
+{
+  "name": "كاتب الأوامر الذكي - Smart Prompt Engineer",
+  "description": "Smart prompt engineer supporting English (primary), Kurdish (Sorani, Badini, Kurmanji, Hawrami), and Arabic to turn casual requests into production-grade AI prompts",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

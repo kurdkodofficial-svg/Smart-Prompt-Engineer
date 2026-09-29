@@ -1,0 +1,49 @@
+name: 24/7 Keep-Alive (Prevent Pause & Sleep)
+
+on:
+  schedule:
+    # Runs every 10 minutes (UTC) to keep the app active even with 0 visitors
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+  push:
+    branches: [ main, master ]
+
+jobs:
+  keep-alive:
+    name: Keep App Alive (Anti-Pause)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Application Endpoint
+        run: |
+          # The URL of your deployed application
+          TARGET_URL="${{ secrets.APP_URL }}"
+          
+          # Check if secret is configured
+          if [ -z "$TARGET_URL" ]; then
+            echo "⚠️ APP_URL secret is not set yet in GitHub Secrets."
+            echo "ℹ️ To activate 24/7 Anti-Pause:"
+            echo "1. Go to your GitHub repository -> Settings -> Secrets and variables -> Actions"
+            echo "2. Click 'New repository secret'"
+            echo "3. Name: APP_URL"
+            echo "4. Value: https://your-hosted-app.onrender.com (or your domain/cloud run URL)"
+            exit 0
+          fi
+          
+          # Strip trailing slash if present
+          CLEAN_URL="${TARGET_URL%/}"
+          PING_ENDPOINT="$CLEAN_URL/api/health"
+          
+          echo "🚀 Pinging $PING_ENDPOINT at $(date -u)..."
+          
+          # Perform curl request with timeout
+          HTTP_STATUS=$(curl -s -o /tmp/health_response.json -w "%{http_code}" --max-time 20 "$PING_ENDPOINT" || echo "000")
+          
+          echo "📡 HTTP Response Code: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
+            echo "✅ Ping successful! App is warm and running 24/7."
+            cat /tmp/health_response.json || true
+          else
+            echo "⚠️ Server returned status $HTTP_STATUS. Retrying in 5 seconds..."
+            sleep 5
+            curl -f -s --max-time 25 "$PING_ENDPOINT" || echo "Retry completed."
+          fi
