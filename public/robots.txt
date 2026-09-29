@@ -1,0 +1,6 @@
+# Allow all web crawlers (Googlebot, Bingbot, etc.)
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: /sitemap.xml
